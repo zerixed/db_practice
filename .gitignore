@@ -1,6 +1,5 @@
-.env
-__pycache__/
-*.pyc
-*.db
 venv/
 .venv/
+__pycache__/
+*.pyc
+.env

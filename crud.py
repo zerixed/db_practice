@@ -1,21 +1,43 @@
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import User
-from database import Base, engine, async_session
-async def create_user(session: AsyncSession, name:str, phone:str):
-    new_user = User(name=name, phone=phone)
-    session.add(new_user)
-    await session.commit()
-    return new_user
-async def get_users_by_name(session: AsyncSession, name:str):
-    stmt = select(User).where(User.name == name)
+from typing import Optional
+async def get_or_create_user(
+        session: AsyncSession,
+        telegram_id: str,
+        username: Optional[str] = None,
+        first_name: Optional[str] = None,
+        ) -> User:
+    stmt = select(User).where(User.telegram_id == telegram_id)
     result = await session.execute(stmt)
-    return result.scalars().all()
-async def update_user_phone(session: AsyncSession, name:str, new_phone:str):
-    stmt = update(User).where(User.name == name,).values(phone=new_phone)
+    user = result.scalars().first()
+    if not user:
+        user = User(
+            telegram_id = telegram_id,
+            username = username,
+            first_name = first_name,
+        )  
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+    return user
+async def get_user_by_telegram_id(
+        session: AsyncSession, telegram_id: int
+        ) -> Optional[User]:
+    stmt = select(User).where(User.telegram_id == telegram_id)
+    result = await session.execute(stmt)
+    return result.scalars().first()
+async def update_user_username(
+        session: AsyncSession, telegram_id:int, new_username:int
+        ):
+    stmt = (
+        update(User)
+        .where(User.telegram_id == telegram_id)
+        .values(username=new_username)
+    )
     await session.execute(stmt)
-    await session.commit()
-async def delete_user(session:AsyncSession, name:str):
-    stmt = delete(User).where(User.name == name)
+    await session.commit
+async def delete_user(session:AsyncSession, telegram_id:int):
+    stmt = delete(User).where(User.telegram_id == telegram_id)
     await session.execute(stmt)
-    await session.commit()
+    await session.commit()  
