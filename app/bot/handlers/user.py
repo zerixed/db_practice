@@ -13,7 +13,7 @@ async def cmd_start(message:Message, session: AsyncSession):
         first_name=message.from_user.first_name,
     )
     await message.answer(
-        f"Привет, {new_user.first_name}!\n\n"
-        f"Ты успешно сохранен в базе данных PostgreSQL!\n"
-        f"Твой ID в базе: {new_user.id}"
+        f"Hello, {new_user.first_name}!\n\n"
+        f"You are successfully created in db PostgreSQL!\n"
+        f"Your id in db: {new_user.id}"
     )
