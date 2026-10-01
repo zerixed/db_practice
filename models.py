@@ -1,10 +1,19 @@
 from database import Base
-from sqlalchemy import BigInteger, Column, Integer, String
+from sqlalchemy import BigInteger, Column, Integer, String, Boolean
+from sqlalchemy.orm import Mapped, mapped_column
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(BigInteger, unique=True, index=True, nullable=False)
-    username = Column(String,nullable=True)
-    name = Column(String, nullable=True)
-    age = Column(Integer, nullable=True)
-    about = Column(String, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    telegram_id: Mapped[int] = mapped_column(
+        BigInteger, unique=True, index=True, nullable=False
+    )
+    username: Mapped[str | None] = mapped_column(default=None)
+    name: Mapped[str | None] = mapped_column(default=None)
+    age: Mapped[int | None] = mapped_column(default=None)
+    about: Mapped[str | None] = mapped_column(default=None)
+class Reaction(Base):
+    __tablename__ = "reacions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_user_id:Mapped[int] = mapped_column(BigInteger,nullable=False)
+    to_user_id:Mapped[int] = mapped_column(BigInteger,nullable=False)
+    is_like:Mapped[bool] = mapped_column(nullable=False)

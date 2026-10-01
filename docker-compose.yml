@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
     db:
         image: postgres:16-alpine
@@ -12,5 +13,20 @@ services:
             - "${DB_PORT}:5432"
         volumes:
             - postgres_data:/var/lib/postgresql/data
+
+    bot:
+        build: .
+        container_name: db_practice_bot
+        restart: always
+        depends_on:
+            - db
+        environment:
+            - BOT_TOKEN=${BOT_TOKEN}
+            - DB_USER=${DB_USER}
+            - DB_PASS=${DB_PASS}
+            - DB_NAME=${DB_NAME}
+            - DB_HOST=db
+            - DB_PORT=5432
+
 volumes:
     postgres_data:
