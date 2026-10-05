@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import BigInteger, Column, Integer, String, Boolean
+from sqlalchemy import BigInteger
 from sqlalchemy.orm import Mapped, mapped_column
 class User(Base):
     __tablename__ = "users"
@@ -10,9 +10,11 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(default=None)
     name: Mapped[str | None] = mapped_column(default=None)
     age: Mapped[int | None] = mapped_column(default=None)
+    gender: Mapped[str | None] = mapped_column(default=None)
     about: Mapped[str | None] = mapped_column(default=None)
+    photo_id: Mapped[str | None] = mapped_column(default=None)
 class Reaction(Base):
-    __tablename__ = "reacions"
+    __tablename__ = "reactions"
     id: Mapped[int] = mapped_column(primary_key=True)
     from_user_id:Mapped[int] = mapped_column(BigInteger,nullable=False)
     to_user_id:Mapped[int] = mapped_column(BigInteger,nullable=False)

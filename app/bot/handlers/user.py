@@ -3,8 +3,8 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from sqlalchemy.ext.asyncio import AsyncSession
 from crud import get_or_create_user
-user = Router()
-@user.message(CommandStart())
+router = Router()
+@router.message(CommandStart())
 async def cmd_start(message:Message, session: AsyncSession):
     new_user = await get_or_create_user(
         session=session,

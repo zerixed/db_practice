@@ -5,18 +5,26 @@ def get_profile() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(text="edit name", callback_data="edit_name"),
                 InlineKeyboardButton(text="edit age", callback_data="edit_age"),
-                InlineKeyboardButton(text="edit bio", callback_data="edit_about"),
-            ]
+            ],
+            [
+                InlineKeyboardButton(text="edit gender", callback_data="edit_gender"),
+                InlineKeyboardButton(text="edit photo", callback_data="edit_photo"),
+            ],
+            [
+                InlineKeyboardButton(text="edit about", callback_data="edit_about"),
+            ],
         ]
     )
 def get_matching_keyboard(target_user_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
+    return ReplyKeyboardMarkup(
+        keyboard=[
             [
-                InlineKeyboardButton(text="Skip_", callback_data=f"dislike_{target_user_id}"),
-                InlineKeyboardButton(text="Like_", callback_data=f"like_{target_user_id}"),
+                KeyboardButton(text="Skip"),
+                KeyboardButton(text="Like"),
+                KeyboardButton(text="Finish")
             ]
-        ]
+        ],
+        resize_keyboard=True,
     )
 def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
@@ -26,15 +34,35 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
         ],
         resize_keyboard=True,
     )
-def get_reset_keyboard():
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="View profiles again", callback_data="reset_reactions")]
-        ]
+def get_reset_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="View profiles again"),
+                KeyboardButton(text="My profile")
+                ]
+            ],
+        resize_keyboard=True,
     )
 def get_like_notification_keyboard(liker_id: int):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="view profiles", callback_data=f"show_card_{liker_id}")]
         ]
+    )
+def get_gender_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Man"), KeyboardButton(text="Woman")],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+def get_skip_bio_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="skip")],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
     )

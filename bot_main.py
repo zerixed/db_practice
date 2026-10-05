@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from config import settings
 from app.bot.middlewares.db import DbSessionMiddleware
-from app.bot.handlers.user import user
+from app.bot.handlers.user import router as user_router
 from app.bot.handlers.registration import router as registration_router
 from app.bot.handlers.feed import router as feed_router
 
@@ -16,9 +16,10 @@ async def main():
     dp = Dispatcher()
     dp.update.outer_middleware(DbSessionMiddleware())
     dp.include_router(registration_router)
-    dp.include_router(user)
+    dp.include_router(user_router)
     dp.include_router(feed_router)
-    print('Bot successfully started')
+    await bot.delete_webhook(drop_pending_updates=True)
+    logging.info('Bot successfully started')
     await dp.start_polling(bot)
 
 if __name__ == '__main__':

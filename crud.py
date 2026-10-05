@@ -5,9 +5,9 @@ from typing import Optional
 from sqlalchemy.dialects.postgresql import insert
 async def get_or_create_user(
         session: AsyncSession,
-        telegram_id: str,
+        telegram_id: int,
         username: Optional[str] = None,
-        first_name: Optional[str] = None,
+        name: Optional[str] = None,
         ) -> User:
     stmt = select(User).where(User.telegram_id == telegram_id)
     result = await session.execute(stmt)
@@ -16,20 +16,14 @@ async def get_or_create_user(
         user = User(
             telegram_id = telegram_id,
             username = username,
-            first_name = first_name,
+            name = name,
         )  
         session.add(user)
         await session.commit()
         await session.refresh(user)
     return user
-async def get_user_by_telegram_id(
-        session: AsyncSession, telegram_id: int
-        ) -> Optional[User]:
-    stmt = select(User).where(User.telegram_id == telegram_id)
-    result = await session.execute(stmt)
-    return result.scalars().first()
 async def update_user_username(
-        session: AsyncSession, telegram_id:int, new_username:int
+        session: AsyncSession, telegram_id:int, new_username:str
         ):
     stmt = (
         update(User)
@@ -59,8 +53,10 @@ async def upsert_user_profile(
         telegram_id: int,
         username: str | None,
         name: str,
-        age: str,
+        age: int,
+        gender:str,
         about: str,
+        photo_id: str | None = None,
 ) -> None:
     stmt = (
         insert(User)
@@ -69,7 +65,9 @@ async def upsert_user_profile(
             username=username,
             name=name,
             age=age,
-            about=about
+            gender=gender,
+            about=about,
+            photo_id=photo_id,
         )
         .on_conflict_do_update(
             index_elements=["telegram_id"],
@@ -77,21 +75,23 @@ async def upsert_user_profile(
                 "username": username,
                 "name": name,
                 "age": age,
+                "gender": gender,
                 "about": about,
+                "photo_id": photo_id,
             },
         )
     )
     await session.execute(stmt)
     await session.commit()
 async def get_random_candidate(session:AsyncSession, user_id:int):
-    evalualted_users = select(Reaction.to_user_id).where(
+    evaluated_users = select(Reaction.to_user_id).where(
         Reaction.from_user_id == user_id
     )
     stmt = (
         select(User)
         .where(
             User.telegram_id != user_id,
-            User.telegram_id.not_in(evalualted_users))
+            User.telegram_id.not_in(evaluated_users))
         .order_by(func.random())
         .limit(1)
     )
