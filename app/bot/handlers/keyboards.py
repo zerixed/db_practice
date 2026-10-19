@@ -12,6 +12,7 @@ def get_profile() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text="edit about", callback_data="edit_about"),
+                InlineKeyboardButton(text="edit target gender", callback_data="edit_target_gender")
             ],
         ]
     )
@@ -62,6 +63,15 @@ def get_skip_bio_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="skip")],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+def get_target_gender_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Men"), KeyboardButton(text="Women")],
+            [KeyboardButton(text="Everyone")]
         ],
         resize_keyboard=True,
         one_time_keyboard=True,

@@ -1,4 +1,4 @@
-from sqlalchemy import select, delete, update, func
+from sqlalchemy import select, delete, update, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import User, Reaction
 from typing import Optional
@@ -55,6 +55,7 @@ async def upsert_user_profile(
         name: str,
         age: int,
         gender:str,
+        target_gender:str,
         about: str,
         photo_id: str | None = None,
 ) -> None:
@@ -66,6 +67,7 @@ async def upsert_user_profile(
             name=name,
             age=age,
             gender=gender,
+            target_gender=target_gender,
             about=about,
             photo_id=photo_id,
         )
@@ -76,6 +78,7 @@ async def upsert_user_profile(
                 "name": name,
                 "age": age,
                 "gender": gender,
+                "target_gender": target_gender,
                 "about": about,
                 "photo_id": photo_id,
             },
@@ -83,18 +86,22 @@ async def upsert_user_profile(
     )
     await session.execute(stmt)
     await session.commit()
-async def get_random_candidate(session:AsyncSession, user_id:int):
-    evaluated_users = select(Reaction.to_user_id).where(
-        Reaction.from_user_id == user_id
+async def get_random_candidate(session: AsyncSession, current_user_id: int):
+    stmt_user = select(User).where(User.telegram_id == current_user_id)
+    res = await session.execute(stmt_user)
+    current_user = res.scalar_one_or_none()
+    if not current_user:
+        return None
+    reacted_subquery = select(Reaction.to_user_id).where(Reaction.from_user_id == current_user_id)
+
+    stmt = select(User).where(
+        User.telegram_id != current_user_id,
+        User.telegram_id.not_in(reacted_subquery)
     )
-    stmt = (
-        select(User)
-        .where(
-            User.telegram_id != user_id,
-            User.telegram_id.not_in(evaluated_users))
-        .order_by(func.random())
-        .limit(1)
-    )
+    
+    if current_user.target_gender in ["male", "female"]:
+        stmt = stmt.where(User.gender == current_user.target_gender)
+    stmt = stmt.order_by(func.random()).limit(1)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 async def save_reaction(

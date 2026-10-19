@@ -5,19 +5,21 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from sqlalchemy.ext.asyncio import AsyncSession
 from crud import get_user_by_tg_id, update_user_profile, upsert_user_profile
-from app.bot.handlers.keyboards import get_profile, get_main_menu_keyboard, get_gender_keyboard, get_skip_bio_keyboard
+from app.bot.handlers.keyboards import get_profile, get_main_menu_keyboard, get_gender_keyboard, get_skip_bio_keyboard,get_target_gender_keyboard
 from html import escape
 router = Router()
 class EditProfile(StatesGroup):
     name=State()
     age=State()
     gender=State()
+    target_gender=State()
     about=State()
     photo=State()
 class ProfileForm(StatesGroup):
     name=State()
     age=State()
     gender=State()
+    target_gender=State()
     about=State()
     photo=State()
 
@@ -78,18 +80,34 @@ async def process_age(message:Message, state:FSMContext):
     await state.set_state(ProfileForm.gender)
     await message.answer("Select your gender:", reply_markup=get_gender_keyboard())
 @router.message(ProfileForm.gender)
-async def process_gender(message:Message, state:FSMContext):
-    if message.text not in ["Man", "Woman"]:
+async def process_gender(message: Message, state: FSMContext):
+    text = message.text.strip() if message.text else ""
+    if text not in ["Man", "Woman"]:
         await message.answer("please choose using the buttons below:", reply_markup=get_gender_keyboard())
         return
-    gender_code = "M" if message.answer == "Man" else "F",
-    await state.update_data(gender = gender_code)
+    gender_code = "male" if text == "Man" else "female"
+    await state.update_data(gender=gender_code)
+    await state.set_state(ProfileForm.target_gender)
+    await message.answer("Who are you looking for", reply_markup=get_target_gender_keyboard())
+@router.message(ProfileForm.target_gender)
+async def process_target_gender(message: Message, state: FSMContext):
+    text = message.text.strip() if message.text else ""
+    mapping = {"Men": "male", "Women": "female", "Everyone": "all"}
+    if text not in mapping:
+        await message.answer(
+            "please choose using the button below:",
+            reply_markup=get_target_gender_keyboard(),
+        )
+        return
+    await state.update_data(target_gender=mapping[text])
     await state.set_state(ProfileForm.about)
-    await message.answer("Tell something about yourself:", reply_markup=get_skip_bio_keyboard())
+    await message.answer(
+        "Tell something about yourself:", reply_markup=get_skip_bio_keyboard()
+    )
 @router.message(ProfileForm.about)
-async def process_about(message:Message, state:FSMContext, session:AsyncSession):
-    text = message.text.strip()
-    if text in ["Skip"]:
+async def process_about(message: Message, state: FSMContext, session: AsyncSession):
+    text = message.text.strip() if message.text else ""
+    if text.lower() == "skip":
         about = None
     else:
         if len(text) > 300:
@@ -110,6 +128,7 @@ async def process_photo(message:Message,state:FSMContext, session:AsyncSession):
         name=data.get("name"),
         age=data.get("age"),
         gender=data.get("gender"),
+        target_gender=data.get("target_gender"),
         about=data.get("about"),
         photo_id=photo_id,
     )
@@ -182,7 +201,7 @@ async def process_edit_photo(message:Message,state:FSMContext,session:AsyncSessi
 async def process_edit_photo_invalid(message:Message):
     await message.answer("Please send an image as a photo (not as a document/file).")
 @router.callback_query(F.data == "edit_gender")
-async def statr_edit_gender(callback:CallbackQuery, state:FSMContext):
+async def start_edit_gender(callback:CallbackQuery, state:FSMContext):
     await callback.message.answer("Ented your gender", reply_markup=get_gender_keyboard())
     await state.set_state(EditProfile.gender)
     await callback.answer()
@@ -191,7 +210,30 @@ async def process_edit_gender(message:Message, state:FSMContext, session:AsyncSe
     if message.text not in ["Man","Woman"]:
         await message.answer("Choose option below:", reply_markup=get_gender_keyboard())
         return
-    gender_code = "M" if message.text == "Man" else "F"
+    gender_code = "male" if message.text == "Man" else "female"
     await update_user_profile(session, message.from_user.id, gender=gender_code)
     await state.clear()
     await message.answer("Your gender successfully updated", reply_markup=get_main_menu_keyboard())
+@router.callback_query(F.data == "edit_target_gender")
+async def start_edit_target_gender(callback:CallbackQuery, state:FSMContext):
+    await callback.message.answer(
+        "Who are you looking for?", reply_markup=get_target_gender_keyboard()
+    )
+    await state.set_state(EditProfile.target_gender)
+    await callback.answer()
+@router.message(EditProfile.target_gender)
+async def process_edit_target_gender(message:Message, state:FSMContext, session:AsyncSession):
+    if message.text not in ["Men","Women","Everyone"]:
+        await message.answer(
+            "Choose option below", reply_markup=get_target_gender_keyboard()
+        )
+        return
+    mapping = {"Men": "male", "Women": "female", "Everyone": "all"}
+    await update_user_profile(
+        session, message.from_user.id,target_gender=mapping[message.text]
+    )
+    await state.clear()
+    await message.answer(
+        "Your preference was successfully updated",
+        reply_markup=get_main_menu_keyboard(),
+    )

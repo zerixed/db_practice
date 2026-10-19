@@ -13,6 +13,7 @@ class User(Base):
     gender: Mapped[str | None] = mapped_column(default=None)
     about: Mapped[str | None] = mapped_column(default=None)
     photo_id: Mapped[str | None] = mapped_column(default=None)
+    target_gender: Mapped[str | None] = mapped_column(default=None)
 class Reaction(Base):
     __tablename__ = "reactions"
     id: Mapped[int] = mapped_column(primary_key=True)

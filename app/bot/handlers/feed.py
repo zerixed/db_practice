@@ -57,7 +57,8 @@ async def btn_search(message: Message, session: AsyncSession, state:FSMContext):
         await reset_user_reactions(session,message.from_user.id)
     await render_next_candidate(message, session, state, message.from_user.id)
 @router.message(FeedStates.browsing, F.text == ("Like"))
-async def process_like(message:Message, session:AsyncSession,state:FSMContext, bot:Bot):
+@router.message(FeedStates.browsing, F.text == "Like")
+async def process_like(message: Message, session: AsyncSession, state: FSMContext, bot: Bot):
     data = await state.get_data()
     target_id = data.get("target_id")
     if not target_id:
@@ -119,19 +120,21 @@ async def process_like(message:Message, session:AsyncSession,state:FSMContext, b
             logger.warning(f"Unable to notify user of a match{target_id}: {e}")
         except Exception as e:
             logger.error(f"Failed to send match to user {target_id}: {e}")
+    await state.set_state(FeedStates.browsing)
     await render_next_candidate(message, session, state, message.from_user.id)
-@router.message(FeedStates.browsing, F.text == ("Skip"))
-async def process_skip(message: Message, session:AsyncSession, state:FSMContext):
+@router.message(FeedStates.browsing, F.text == "Skip")
+async def process_skip(message: Message, session: AsyncSession, state: FSMContext):
     data = await state.get_data()
     target_id = data.get("target_id")
     if target_id:
         await save_reaction(
-        session,
-        from_id=message.from_user.id,
-        to_id=target_id,
-        is_like=False
-    )
-    await render_next_candidate(message,session, state, message.from_user.id)
+            session,
+            from_id=message.from_user.id,
+            to_id=target_id,
+            is_like=False
+        )
+    await state.set_state(FeedStates.browsing)
+    await render_next_candidate(message, session, state, message.from_user.id)
 @router.message(FeedStates.browsing,F.text == "Finish")
 async def process_stop_feed(message:Message, state:FSMContext):
     await state.clear()
