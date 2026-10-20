@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     DB_PASS: str 
     DB_NAME: str
     BOT_TOKEN: str
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     @property
     def DATABASE_URL_asyncpg(self) ->str:

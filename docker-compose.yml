@@ -19,6 +19,13 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:alpine
+    container_name: db_practice_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+
   bot:
     build: .
     container_name: db_practice_bot
@@ -28,11 +35,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - DB_HOST=db
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - .:/app
     command: sh -c "alembic upgrade head && python bot_main.py"
 
 volumes:
   postgres_data:
+  redis_data:
