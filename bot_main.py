@@ -2,8 +2,10 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
+from redis.asyncio import Redis
 from config import settings
 from app.bot.middlewares.db import DbSessionMiddleware
+from app.bot.middlewares.ratelimit import ThrottlingMiddleware
 from app.bot.handlers.user import router as user_router
 from app.bot.handlers.registration import router as registration_router
 from app.bot.handlers.feed import router as feed_router
@@ -15,8 +17,10 @@ async def main():
     )
     bot = Bot(token=settings.BOT_TOKEN)
     storage = RedisStorage.from_url(settings.REDIS_URL)
+    redis_client = Redis.from_url(settings.REDIS_URL)
     dp = Dispatcher(storage=storage)
     dp.update.outer_middleware(DbSessionMiddleware())
+    dp.message.middleware(ThrottlingMiddleware(redis=redis_client,rate_limit=0.3))
     dp.include_router(registration_router)
     dp.include_router(user_router)
     dp.include_router(feed_router)
