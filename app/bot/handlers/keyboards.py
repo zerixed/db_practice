@@ -11,7 +11,7 @@ def get_profile() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="edit photo", callback_data="edit_photo"),
             ],
             [
-                InlineKeyboardButton(text="edit about", callback_data="edit_about"),
+                InlineKeyboardButton(text="edit bio", callback_data="edit_about"),
                 InlineKeyboardButton(text="edit target gender", callback_data="edit_target_gender")
             ],
         ]

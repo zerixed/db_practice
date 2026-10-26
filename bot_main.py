@@ -6,7 +6,6 @@ from redis.asyncio import Redis
 from config import settings
 from app.bot.middlewares.db import DbSessionMiddleware
 from app.bot.middlewares.ratelimit import ThrottlingMiddleware
-from app.bot.handlers.user import router as user_router
 from app.bot.handlers.registration import router as registration_router
 from app.bot.handlers.feed import router as feed_router
 
@@ -22,7 +21,6 @@ async def main():
     dp.update.outer_middleware(DbSessionMiddleware())
     dp.message.middleware(ThrottlingMiddleware(redis=redis_client,rate_limit=0.3))
     dp.include_router(registration_router)
-    dp.include_router(user_router)
     dp.include_router(feed_router)
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info('Bot successfully started')
